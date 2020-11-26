@@ -22,37 +22,43 @@ class Player:
         self.lives = 1
 
     def update(self):
-        if self.able_to_move:
-            self.pix_pos += self.direction*self.speed
-        if self.time_to_move():
-            if self.stored_direction != None:
-                self.direction = self.stored_direction
-            self.able_to_move = self.can_move()
-        
-        # Setting grid position in reference to pix pos
-        self.grid_pos[0] = (self.pix_pos[0]-TOP_BOTTOM_BUFFER +
-                            self.app.cell_width//2)//self.app.cell_width+1
-        self.grid_pos[1] = (self.pix_pos[1]-TOP_BOTTOM_BUFFER +
-                            self.app.cell_height//2)//self.app.cell_height+1
-        if self.on_coin():
-            self.eat_coin()
-        
-        if self.on_pellet():
-            self.eat_pellet()
-            self.power_up_time = time.time()
+        if self.quarantine_check:
+            if time.time() - self.quarantine_time > 5:
+                self.quarantine_check = False
+                self.grid_pos = vec(self.starting_pos)
+                self.pix_pos = self.get_pix_pos()
+        else:
+            if self.able_to_move:
+                self.pix_pos += self.direction*self.speed
+            if self.time_to_move():
+                if self.stored_direction != None:
+                    self.direction = self.stored_direction
+                self.able_to_move = self.can_move()
+            
+            # Setting grid position in reference to pix pos
+            self.grid_pos[0] = (self.pix_pos[0]-TOP_BOTTOM_BUFFER +
+                                self.app.cell_width//2)//self.app.cell_width+1
+            self.grid_pos[1] = (self.pix_pos[1]-TOP_BOTTOM_BUFFER +
+                                self.app.cell_height//2)//self.app.cell_height+1
+            if self.on_coin():
+                self.eat_coin()
+            
+            if self.on_pellet():
+                self.eat_pellet()
+                self.power_up_time = time.time()
 
-        if time.time() - self.power_up_time > 5:
-            self.power_up = False
-            for enemy in self.app.enemies:
-                enemy.personality = 'speedy'
+            if time.time() - self.power_up_time > 5:
+                self.power_up = False
+                for enemy in self.app.enemies:
+                    enemy.personality = 'speedy'
         
     def draw(self):
         if self.power_up:
             pygame.draw.circle(self.app.screen, PLAYER_POWER_UP, (int(self.pix_pos.x),
                                                             int(self.pix_pos.y)), self.app.cell_width//2-2)
-        elif self.quarantine_check:
-             pygame.draw.circle(self.app.screen, PLAYER_QUARANTINE_TIME, (int(self.pix_pos.x),
-                                                            int(self.pix_pos.y)), 20)
+        # elif self.quarantine_check:
+        #      pygame.draw.circle(self.app.screen, PLAYER_QUARANTINE_TIME, (int(self.pix_pos.x),
+        #                                                     int(self.pix_pos.y)), 20)
         else:    
             pygame.draw.circle(self.app.screen, PLAYER_COLOUR, (int(self.pix_pos.x),
                                                             int(self.pix_pos.y)), self.app.cell_width//2-2)
@@ -120,9 +126,13 @@ class Player:
         return True
 
     def quarantine(self):
-        print('i am quanrantine')
+        self.pix_pos = vec(80, HEIGHT / 2)
         self.quarantine_check = True
-        self.quarantine_time = time.time()
-        self.grid_pos = vec(10,10)
-        self.pix_pos = self.get_pix_pos()
-        self.direction *= 0
+
+        for enemy in self.app.enemies:
+            enemy.personality = 'random'
+        # self.quarantine_check = True
+        # self.quarantine_time = time.time()
+        # self.grid_pos = vec(10,10)
+        # self.pix_pos = self.get_pix_pos()
+        # self.direction *= 0
