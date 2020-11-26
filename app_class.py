@@ -172,8 +172,9 @@ class App:
                 if self.player.power_up:
                     enemy.return_home()
                 else:
-                    # self.remove_life()
+                    self.player.quarantine_time = time.time()
                     self.player.quarantine()
+                    # self.remove_life()
 
     def playing_draw(self):
         self.screen.fill(BLACK)
@@ -185,8 +186,8 @@ class App:
         self.draw_text('CURRENT SCORE: {}'.format(self.player.current_score),
                        self.screen, [60, 0], 18, WHITE, START_FONT)
         self.draw_text('HIGH SCORE: 0', self.screen, [WIDTH//2+60, 0], 18, WHITE, START_FONT)
-        if not self.player.quarantine_check:
-            self.player.draw()
+        # if not self.player.quarantine_check:
+        self.player.draw()
         
         for enemy in self.enemies:
             enemy.draw()
