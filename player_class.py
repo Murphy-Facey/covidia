@@ -33,12 +33,12 @@ class Player:
             self.app.sanitizers = self.temp_sanitizers
             self.app.draw_sanitizers()
             self.temp_sanitizers = []
-        
+
         if self.mask_count == 2:
             self.app.masks = self.temp_masks
             self.app.draw_masks()
             self.temp_masks = []
-            
+
         if self.quarantine_check:
             if time.time() - self.quarantine_time > 5:
                 self.quarantine_check = False
@@ -52,7 +52,7 @@ class Player:
                 if self.stored_direction != None:
                     self.direction = self.stored_direction
                 self.able_to_move = self.can_move()
-            
+
             # Setting grid position in reference to pix pos
             self.grid_pos[0] = (self.pix_pos[0]-TOP_BOTTOM_BUFFER +
                                 self.app.cell_width//2)//self.app.cell_width+1
@@ -60,13 +60,13 @@ class Player:
                                 self.app.cell_height//2)//self.app.cell_height+1
             if self.on_coin():
                 self.eat_coin()
-            
+
             if self.on_mask():
                 self.wear_mask()
 
             if self.on_person():
                 self.eat_person()
-            
+
             if self.on_sanitizer():
                 self.use_sanitizer()
                 self.power_up_time = time.time()
@@ -78,25 +78,30 @@ class Player:
                 self.app.enemies[2].personality = 'random'
                 self.app.enemies[3].personality = 'random'
 
-            
             if time.time() - self.mask_on_time > 5:
                 self.mask_on = False
+                # self.speed = 2
                 for enemy in self.app.enemies:
                     enemy.speed = 2
-        
+
     def draw(self):
         if self.power_up:
-            pygame.draw.circle(self.app.screen, (20, 198, 222), (int(self.pix_pos.x), int(self.pix_pos.y)), self.app.cell_width//2-2)
+            pygame.draw.circle(self.app.screen, (20, 198, 222), (int(
+                self.pix_pos.x), int(self.pix_pos.y)), self.app.cell_width//2-2)
         elif self.mask_on:
-            pygame.draw.circle(self.app.screen, (170, 111, 237), (int(self.pix_pos.x),int(self.pix_pos.y)), self.app.cell_width//2-2)
+            pygame.draw.circle(self.app.screen, (170, 111, 237), (int(
+                self.pix_pos.x), int(self.pix_pos.y)), self.app.cell_width//2-2)
         elif self.quarantine_check:
-            pygame.draw.circle(self.app.screen, PLAYER_QUARANTINE_TIME, (int(self.pix_pos.x),int(self.pix_pos.y)), 20)
-        else:    
-            pygame.draw.circle(self.app.screen, PLAYER_COLOUR, (int(self.pix_pos.x), int(self.pix_pos.y)), self.app.cell_width//2-2)
+            pygame.draw.circle(self.app.screen, PLAYER_QUARANTINE_TIME, (int(
+                self.pix_pos.x), int(self.pix_pos.y)), 20)
+        else:
+            pygame.draw.circle(self.app.screen, PLAYER_COLOUR, (int(
+                self.pix_pos.x), int(self.pix_pos.y)), self.app.cell_width//2-2)
 
         # Drawing player lives
         for x in range(self.lives):
-            pygame.draw.circle(self.app.screen, PLAYER_COLOUR, (30 + 20*x, HEIGHT - 15), 7)
+            pygame.draw.circle(self.app.screen, PLAYER_COLOUR,
+                               (30 + 20*x, HEIGHT - 15), 7)
 
     def on_coin(self):
         if self.grid_pos in self.app.coins:
@@ -107,7 +112,7 @@ class Player:
                 if self.direction == vec(0, 1) or self.direction == vec(0, -1):
                     return True
         return False
-    
+
     def on_person(self):
         if self.grid_pos in self.app.persons:
             if int(self.pix_pos.x+TOP_BOTTOM_BUFFER//2) % self.app.cell_width == 0:
@@ -127,7 +132,7 @@ class Player:
                 if self.direction == vec(0, 1) or self.direction == vec(0, -1):
                     return True
         return False
-    
+
     def on_mask(self):
         if self.grid_pos in self.app.masks:
             if int(self.pix_pos.x+TOP_BOTTOM_BUFFER//2) % self.app.cell_width == 0:
@@ -141,19 +146,19 @@ class Player:
     def eat_coin(self):
         self.app.coins.remove(self.grid_pos)
         self.current_score += 1
-    
+
     def wear_mask(self):
         if self.mask_count != 2:
             self.mask_count += 1
-        else: 
+        else:
             self.mask_count = 1
-        
-        self.temp_masks.append(self.app.masks[self.app.masks.index(self.grid_pos)])
+
+        self.temp_masks.append(
+            self.app.masks[self.app.masks.index(self.grid_pos)])
         self.app.masks.remove(self.grid_pos)
         self.mask_on = True
         self.mask_on_time = time.time()
-        for enemy in self.app.enemies:
-            enemy.speed = 1
+        # self.speed = 2.5
 
     def eat_person(self):
         self.app.persons.remove(self.grid_pos)
@@ -161,14 +166,14 @@ class Player:
         if self.app.persons == []:
             self.app.state = 'game over'
 
-    
     def use_sanitizer(self):
         if self.sanitizer_count != 2:
             self.sanitizer_count += 1
-        else: 
+        else:
             self.sanitizer_count = 1
         # self.app.sanitizers.remove(self.grid_pos)
-        self.temp_sanitizers.append(self.app.sanitizers[self.app.sanitizers.index(self.grid_pos)])
+        self.temp_sanitizers.append(
+            self.app.sanitizers[self.app.sanitizers.index(self.grid_pos)])
         self.app.sanitizers.remove(self.grid_pos)
         print(self.sanitizer_count, self.temp_sanitizers)
         self.power_up = True
@@ -196,7 +201,13 @@ class Player:
 
     def can_move(self):
         for wall in self.app.walls:
-            if vec(self.grid_pos+self.direction) == wall:
+            # if self.mask_on:
+            #     if self.grid_pos + (self.direction * self.speed) == wall:
+            #         print("You hit a wall motha fu")
+            #         return False
+
+            if self.grid_pos + self.direction == wall:
+                print("You hit a wall at: ", wall, self.pix_pos)
                 return False
         return True
 

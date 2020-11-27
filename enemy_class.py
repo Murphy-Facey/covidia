@@ -4,6 +4,7 @@ from settings import *
 
 vec = pygame.math.Vector2
 
+
 class Enemy:
     def __init__(self, app, pos, number):
         self.app = app
@@ -21,7 +22,7 @@ class Enemy:
 
     def update(self):
         if self.return_flag:
-            self.target = vec(11,14)
+            self.target = vec(11, 14)
         else:
             self.target = self.set_target()
 
@@ -34,8 +35,7 @@ class Enemy:
                 self.move()
         elif self.return_flag and self.target == self.grid_pos:
             self.return_flag = False
-            self.personality = 'speedy' # this is 
-            
+            self.personality = 'speedy'  # this is
 
         # Setting grid position in reference to pix position
         self.grid_pos[0] = (self.pix_pos[0]-TOP_BOTTOM_BUFFER +
@@ -45,16 +45,17 @@ class Enemy:
 
     def draw(self):
         if self.personality == 'scared':
-             pygame.draw.circle(self.app.screen, (235,235,235), (int(self.pix_pos.x), int(self.pix_pos.y)), self.radius)
+            pygame.draw.circle(self.app.screen, (235, 235, 235), (int(
+                self.pix_pos.x), int(self.pix_pos.y)), self.radius)
         else:
             pygame.draw.circle(self.app.screen, self.colour,
-                           (int(self.pix_pos.x), int(self.pix_pos.y)), self.radius)
+                               (int(self.pix_pos.x), int(self.pix_pos.y)), self.radius)
 
     def set_speed(self):
         if self.personality in ["speedy"]:
             speed = 2
         else:
-            speed = 1
+            speed = 2
         return speed
 
     def set_target(self):
@@ -110,10 +111,10 @@ class Enemy:
         self.app.player.current_score -= 50
         if self.app.persons == []:
             self.app.state = 'game_over'
-    
 
     def find_next_cell_in_path(self, target):
-        path = self.BFS([int(self.grid_pos.x), int(self.grid_pos.y)], [int(target[0]), int(target[1])])
+        path = self.BFS([int(self.grid_pos.x), int(self.grid_pos.y)], [
+                        int(target[0]), int(target[1])])
         return path[1]
 
     def BFS(self, start, target):
@@ -135,11 +136,13 @@ class Enemy:
                 for neighbour in neighbours:
                     if neighbour[0]+current[0] >= 0 and neighbour[0] + current[0] < len(grid[0]):
                         if neighbour[1]+current[1] >= 0 and neighbour[1] + current[1] < len(grid):
-                            next_cell = [neighbour[0] + current[0], neighbour[1] + current[1]]
+                            next_cell = [neighbour[0] + current[0],
+                                         neighbour[1] + current[1]]
                             if next_cell not in visited:
                                 if grid[next_cell[1]][next_cell[0]] != 1:
                                     queue.append(next_cell)
-                                    path.append({"Current": current, "Next": next_cell})
+                                    path.append(
+                                        {"Current": current, "Next": next_cell})
         shortest = [target]
         while target != start:
             for step in path:
@@ -163,7 +166,7 @@ class Enemy:
             if next_pos not in self.app.walls:
                 break
         return vec(x_dir, y_dir)
-    
+
     def return_home(self):
         self.return_flag = True
 
