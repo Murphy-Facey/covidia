@@ -20,11 +20,13 @@ class Enemy:
         self.speed = self.set_speed()
 
     def update(self):
-
         if self.return_flag:
             self.target = vec(11,14)
         else:
             self.target = self.set_target()
+
+        if self.on_person():
+            self.eat_person()
 
         if self.target != self.grid_pos:
             self.pix_pos += self.direction * self.speed
@@ -42,11 +44,14 @@ class Enemy:
                             self.app.cell_height//2)//self.app.cell_height+1
 
     def draw(self):
-        pygame.draw.circle(self.app.screen, self.colour,
+        if self.personality == 'scared':
+             pygame.draw.circle(self.app.screen, (235,235,235), (int(self.pix_pos.x), int(self.pix_pos.y)), self.radius)
+        else:
+            pygame.draw.circle(self.app.screen, self.colour,
                            (int(self.pix_pos.x), int(self.pix_pos.y)), self.radius)
 
     def set_speed(self):
-        if self.personality in ["speedy", "scared"]:
+        if self.personality in ["speedy"]:
             speed = 2
         else:
             speed = 1
@@ -90,9 +95,25 @@ class Enemy:
         ydir = next_cell[1] - self.grid_pos[1]
         return vec(xdir, ydir)
 
+    def on_person(self):
+        if self.grid_pos in self.app.persons:
+            if int(self.pix_pos.x+TOP_BOTTOM_BUFFER//2) % self.app.cell_width == 0:
+                if self.direction == vec(1, 0) or self.direction == vec(-1, 0):
+                    return True
+            if int(self.pix_pos.y+TOP_BOTTOM_BUFFER//2) % self.app.cell_height == 0:
+                if self.direction == vec(0, 1) or self.direction == vec(0, -1):
+                    return True
+        return False
+
+    def eat_person(self):
+        self.app.persons.remove(self.grid_pos)
+        self.app.player.current_score -= 50
+        if self.app.persons == []:
+            self.app.state = 'game_over'
+    
+
     def find_next_cell_in_path(self, target):
-        path = self.BFS([int(self.grid_pos.x), int(self.grid_pos.y)], [
-                        int(target[0]), int(target[1])])
+        path = self.BFS([int(self.grid_pos.x), int(self.grid_pos.y)], [int(target[0]), int(target[1])])
         return path[1]
 
     def BFS(self, start, target):
@@ -165,7 +186,7 @@ class Enemy:
         if self.number == 0:
             return "speedy"
         elif self.number == 1:
-            return "speedy"
+            return "random"
         elif self.number == 2:
             return "random"
         else:

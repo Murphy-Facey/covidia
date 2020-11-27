@@ -1,6 +1,7 @@
 import pygame
 import sys
 import copy
+from random import randint
 from settings import *
 from player_class import *
 from enemy_class import *
@@ -20,8 +21,10 @@ class App:
         self.cell_height = MAZE_HEIGHT//ROWS
         self.walls = []
         self.coins = []
-        self.pellets = []
+        self.sanitizers = []
+        self.masks = []
         self.enemies = []
+        self.persons = []
         self.e_pos = []
         self.p_pos = None
         self.load()
@@ -49,6 +52,7 @@ class App:
         sys.exit()
 
 ############################ HELPER FUNCTIONS ##################################
+        
 
     def draw_text(self, words, screen, pos, size, colour, font_name, centered=False):
         font = pygame.font.SysFont(font_name, size)
@@ -74,8 +78,14 @@ class App:
                         self.draw_walls()
                     elif char == "C":
                         self.coins.append(vec(xidx, yidx))
+                    elif char == ".":
+                        x = [False, False, False, True, False, False, False, False, False, False, False]
+                        if x[randint(0, len(x) - 1)]:
+                            self.persons.append(vec(xidx, yidx))
                     elif char == "I":
-                        self.pellets.append(vec(xidx, yidx))
+                        self.sanitizers.append(vec(xidx, yidx))
+                    elif char == "M":
+                        self.masks.append(vec(xidx,yidx))
                     elif char == "P":
                         self.p_pos = [xidx, yidx]
                     elif char in ["2", "3", "4", "5"]:
@@ -95,9 +105,6 @@ class App:
         for x in range(HEIGHT//self.cell_height):
             pygame.draw.line(self.background, GREY, (0, x*self.cell_height),
                              (WIDTH, x*self.cell_height))
-        # for coin in self.coins:
-        #     pygame.draw.rect(self.background, (167, 179, 34), (coin.x*self.cell_width,
-        #                                                        coin.y*self.cell_height, self.cell_width, self.cell_height))
     
     def draw_walls(self):
         for wall in self.walls:
@@ -115,12 +122,14 @@ class App:
             enemy.pix_pos = enemy.get_pix_pos()
             enemy.direction *= 0
 
-        self.coins = []
+        self.persons = []
         with open("walls.txt", 'r') as file:
             for yidx, line in enumerate(file):
                 for xidx, char in enumerate(line):
-                    if char == 'C':
-                        self.coins.append(vec(xidx, yidx))
+                    if char == '.':
+                        x = [False, False, False, True, False, False, False, False, False, False, False]
+                        if x[randint(0, len(x) - 1)]:
+                            self.persons.append(vec(xidx, yidx))
         self.state = "playing"
 
 
@@ -168,29 +177,30 @@ class App:
             enemy.update()
 
         for enemy in self.enemies:
-            if enemy.grid_pos == self.player.grid_pos:
-                if self.player.power_up:
-                    enemy.return_home()
-                else:
-                    self.player.quarantine_time = time.time()
-                    self.player.quarantine()
-                    # self.remove_life()
+            if not self.player.mask_on:
+                if enemy.grid_pos == self.player.grid_pos:
+                    if self.player.power_up:
+                        enemy.return_home()
+                    else:
+                        self.remove_life()
 
     def playing_draw(self):
         self.screen.fill(BLACK)
         # self.screen.blit(self.background, (TOP_BOTTOM_BUFFER//2, TOP_BOTTOM_BUFFER//2))
         self.draw_walls()
         self.draw_coins()
-        self.draw_pellets()
+        self.draw_sanitizers()
+        self.draw_masks()
+        self.draw_persons()
         # self.draw_grid()
         self.draw_text('CURRENT SCORE: {}'.format(self.player.current_score),
                        self.screen, [60, 0], 18, WHITE, START_FONT)
         self.draw_text('HIGH SCORE: 0', self.screen, [WIDTH//2+60, 0], 18, WHITE, START_FONT)
         # if not self.player.quarantine_check:
         self.player.draw()
-        
         for enemy in self.enemies:
-            enemy.draw()
+            enemy.draw() 
+            print(enemy.personality)
         
         pygame.display.update()
 
@@ -199,25 +209,32 @@ class App:
         if self.player.lives == 0:
             self.state = "game over"
         else:
-            self.player.grid_pos = vec(self.player.starting_pos)
-            self.player.pix_pos = self.player.get_pix_pos()
-            self.player.direction *= 0
-            for enemy in self.enemies:
-                enemy.grid_pos = vec(enemy.starting_pos)
-                enemy.pix_pos = enemy.get_pix_pos()
-                enemy.direction *= 0
+            self.player.quarantine_time = time.time()
+            self.player.quarantine()
+        
 
     def draw_coins(self):
         for coin in self.coins:
             pygame.draw.circle(self.screen, (124, 123, 7),
                                (int(coin.x*self.cell_width)+self.cell_width//2+TOP_BOTTOM_BUFFER//2,
                                 int(coin.y*self.cell_height)+self.cell_height//2+TOP_BOTTOM_BUFFER//2), 3)
-    def draw_pellets(self):
-        for pellet in self.pellets:
+    def draw_sanitizers(self):
+        for sanitizer in self.sanitizers:
             pygame.draw.circle(self.screen, (20, 198, 222),
-                               (int(pellet.x *self.cell_width) + self.cell_width//2+TOP_BOTTOM_BUFFER//2,
-                                int(pellet.y *self.cell_height) + self.cell_height//2+TOP_BOTTOM_BUFFER//2), 6)
-
+                               (int(sanitizer.x *self.cell_width) + self.cell_width//2+TOP_BOTTOM_BUFFER//2,
+                                int(sanitizer.y *self.cell_height) + self.cell_height//2+TOP_BOTTOM_BUFFER//2), 6)
+    def draw_masks(self):
+        for mask in self.masks:
+            pygame.draw.circle(self.screen, (170, 111, 237),
+                               (int(mask.x *self.cell_width) + self.cell_width//2+TOP_BOTTOM_BUFFER//2,
+                                int(mask.y *self.cell_height) + self.cell_height//2+TOP_BOTTOM_BUFFER//2), 6)
+                                
+    def draw_persons(self):
+            for person in self.persons:
+                pygame.draw.circle(self.screen, (140, 82, 46),
+                                (int(person.x *self.cell_width) + self.cell_width//2+TOP_BOTTOM_BUFFER//2,
+                                    int(person.y *self.cell_height) + self.cell_height//2+TOP_BOTTOM_BUFFER//2), 4)
+    
 ########################### GAME OVER FUNCTIONS ################################
 
     def game_over_events(self):
